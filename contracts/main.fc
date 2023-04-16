@@ -1,0 +1,40 @@
+#include "imports/stdlib.fc";
+
+int load_data() inline {
+    slice ds = get_data().begin_parse();
+    
+    return ds~load_uint(64);
+}
+
+() save_data(int n) impure {
+    set_data(
+        begin_cell()
+            .store_uint(n, 64)
+        .end_cell()
+    );
+}
+
+() recv_internal(cell in_msg_full, slice in_msg_body) impure {
+    if(in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+
+    if(flags & 1) {
+        return ();
+    }
+
+    int num = in_msg_body~load_uint(64);
+
+    int n = load_data();
+
+    n += num; 
+
+    save_data(n);
+}
+
+int get_current_n_value() method_id {
+    return load_data();
+}
